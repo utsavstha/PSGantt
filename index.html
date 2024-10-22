@@ -1,0 +1,208 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PS Gantt Chart</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet">
+
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            padding: 20px;
+        }
+
+        table {
+            border-collapse: collapse;
+            width: 100%;
+            margin-top: 20px;
+        }
+
+        th,
+        td {
+            border: 1px solid black;
+            text-align: center;
+            padding: 8px;
+            width: 40px;
+            height: 25px;
+        }
+
+        form {
+            margin-bottom: 20px;
+        }
+    </style>
+</head>
+
+<body>
+
+    <h2>PS Gantt Chart</h2>
+    <div class="card">
+        <div class="card-body">
+            <form id="chartForm" class="row g-3">
+
+                <div class="col-md-6">
+                    <label for="chartStartDate" class="form-label">Gantt Chart Start Date</label>
+                    <input type="date" id="chartStartDate" name="chartStartDate" class="form-control" required>
+                </div>
+
+
+                <div class="col-md-6">
+                    <label for="chartEndDate" class="form-label">Gantt Chart End Date</label>
+                    <input type="date" id="chartEndDate" name="chartEndDate" class="form-control" required>
+                </div>
+
+                <h3 class="mt-4">Add Task</h3>
+
+
+                <div class="col-md-6">
+                    <label for="taskName" class="form-label">Task Name</label>
+                    <select id="taskName" name="taskName" class="form-select" required>
+                        <option value="" disabled selected>Select a task</option>
+                        <option value="Literature Review">Literature Review</option>
+                        <option value="Thesis Topic Selection">Thesis Topic Selection</option>
+                        <option value="Proposal Writing">Proposal Writing</option>
+                        <option value="Proposal Submission to IRC/COMS">Proposal Submission to IRC/COMS</option>
+                        <option value="IRC Approval">IRC Approval</option>
+                        <option value="KU Approval">KU Approval</option>
+                        <option value="Baseline Data Collection and Entry">Baseline Data Collection and Entry</option>
+                        <option value="Baseline Data Analysis">Baseline Data Analysis</option>
+                        <option value="Data Entry and Analysis">Data Entry and Analysis</option>
+                        <option value="Thesis Preparation">Thesis Preparation</option>
+                        <option value="Thesis Submission">Thesis Submission</option>
+                    </select>
+                </div>
+
+
+                <div class="col-md-6">
+                    <label for="startDate" class="form-label">Start Date</label>
+                    <input type="date" id="startDate" name="startDate" class="form-control" required>
+                </div>
+
+                <div class="col-md-6">
+                    <label for="endDate" class="form-label">End Date</label>
+                    <input type="date" id="endDate" name="endDate" class="form-control" required>
+                </div>
+
+                <div class="col-md-6">
+                    <label for="taskColor" class="form-label">Task Color</label>
+                    <input type="color" id="taskColor" name="taskColor" class="form-control" value="#FFA500" required>
+                </div>
+
+                <div class="col-12 mt-3">
+                    <button type="submit" class="btn btn-primary">Add Task</button>
+                </div>
+            </form>
+        </div>
+
+    </div>
+
+
+    <!-- Gantt Chart Table -->
+    <table id="ganttChart" class="table table-bordered"></table>
+    <table id="ganttChart"></table>
+    <script>
+
+        const tasks = [];
+        let chartStartDate = '';
+        let chartEndDate = '';
+
+        // Create the Gantt chart table dynamically based on tasks array and date range
+        function createGanttChart() {
+            const chart = document.getElementById("ganttChart");
+            chart.innerHTML = '';  // Clear previous chart
+
+            // Check if start and end dates are defined
+            if (!chartStartDate || !chartEndDate) {
+                return;
+            }
+
+            const startDate = new Date(chartStartDate);
+            const endDate = new Date(chartEndDate);
+
+            // Calculate the number of months between the start and end date
+            const totalMonths = (endDate.getFullYear() - startDate.getFullYear()) * 12 + (endDate.getMonth() - startDate.getMonth() + 1);
+
+            // Create header
+            const header = chart.insertRow();
+            const yearHeader = chart.insertRow();
+
+            // Empty cell for task names
+            header.insertCell().outerHTML = "<th>Statements</th>";
+            yearHeader.insertCell().outerHTML = "<th></th>";
+
+            // Fill months and years dynamically
+            let currentYear = startDate.getFullYear();
+            for (let i = 0; i < totalMonths; i++) {
+                const month = new Date(startDate);
+                month.setMonth(startDate.getMonth() + i);
+
+                const monthShort = month.toLocaleString('default', { month: 'short' });
+                const year = month.getFullYear();
+
+                header.insertCell().outerHTML = `<th>${monthShort}</th>`;
+                yearHeader.insertCell().outerHTML = `<th>${year}</th>`;
+            }
+
+            // Function to calculate the month index relative to the chart's start date
+            function getMonthIndex(dateString) {
+                const date = new Date(dateString);
+                return (date.getFullYear() - startDate.getFullYear()) * 12 + (date.getMonth() - startDate.getMonth());
+            }
+
+            // Add rows for each task
+            tasks.forEach(task => {
+                const row = chart.insertRow();
+                const taskNameCell = row.insertCell();
+                taskNameCell.textContent = task.name;
+
+                // Fill in cells for the task range
+                const startIdx = getMonthIndex(task.start);
+                const endIdx = getMonthIndex(task.end);
+
+                for (let i = 0; i < totalMonths; i++) {
+                    const cell = row.insertCell();
+                    if (i >= startIdx && i <= endIdx) {
+                        cell.style.backgroundColor = task.color;
+                    }
+                }
+            });
+        }
+
+        // Handle form submission to add a new task
+        document.getElementById('chartForm').addEventListener('submit', function (event) {
+            event.preventDefault(); // Prevent form submission
+
+            // Get Gantt chart start and end dates
+            chartStartDate = document.getElementById('chartStartDate').value;
+            chartEndDate = document.getElementById('chartEndDate').value;
+
+            // Get task details from the form
+            const taskName = document.getElementById('taskName').value;
+            const startDate = document.getElementById('startDate').value;
+            const endDate = document.getElementById('endDate').value;
+            const taskColor = document.getElementById('taskColor').value;
+
+            // Add task to tasks array
+            tasks.push({
+                name: taskName,
+                start: startDate,
+                end: endDate,
+                color: taskColor
+            });
+
+            // Re-render the Gantt chart with the new task
+            createGanttChart();
+
+            // Clear the task form fields (chart start/end date remain)
+            document.getElementById('taskName').value = '';
+            document.getElementById('startDate').value = '';
+            document.getElementById('endDate').value = '';
+        });
+
+
+        createGanttChart(); 
+    </script>
+</body>
+
+</html>
