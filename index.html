@@ -35,6 +35,7 @@
 </head>
 
 <body>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 
     <h2>PS Gantt Chart</h2>
     <div class="card">
@@ -101,16 +102,17 @@
     <!-- Gantt Chart Table -->
     <table id="ganttChart" class="table table-bordered"></table>
     <table id="ganttChart"></table>
+    <button id="saveChartBtn" class="btn btn-success mt-3">Save as PNG</button>
+
     <script>
 
         const tasks = [];
         let chartStartDate = '';
         let chartEndDate = '';
 
-        // Create the Gantt chart table dynamically based on tasks array and date range
         function createGanttChart() {
             const chart = document.getElementById("ganttChart");
-            chart.innerHTML = '';  // Clear previous chart
+            chart.innerHTML = '';
 
             // Check if start and end dates are defined
             if (!chartStartDate || !chartEndDate) {
@@ -201,7 +203,17 @@
         });
 
 
-        createGanttChart(); 
+        createGanttChart();
+        document.getElementById('saveChartBtn').addEventListener('click', function () {
+            const chartElement = document.getElementById('ganttChart');
+
+            html2canvas(chartElement).then(canvas => {
+                const link = document.createElement('a');
+                link.download = 'gantt_chart.png';  // File name
+                link.href = canvas.toDataURL('image/png');
+                link.click();  // Simulate download click
+            });
+        });
     </script>
 </body>
 
